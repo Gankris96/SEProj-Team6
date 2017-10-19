@@ -25,15 +25,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".LoginActivity"
             android:theme="@style/AppTheme.NoActionBar">
-            <!--<intent-filter>
+
+            <!--
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>-->
+            </intent-filter>
+            -->
         </activity>
         <activity
             android:name=".MainActivity"
@@ -47,9 +49,13 @@
             android:name=".ResetPasswordActivity"
             android:label="@string/title_activity_reset_password"
             android:theme="@style/AppTheme.NoActionBar" />
-               <activity
+        <activity
             android:name=".StudentLogin"
             android:label="@string/title_activity_student_login"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".AccountDetails"
+            android:label="@string/title_activity_account_detials"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

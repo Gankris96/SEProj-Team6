@@ -9,24 +9,35 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserInfo;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
     private Button btnChangeEmail, btnChangePassword, btnSendResetEmail, btnRemoveUser,
-            changeEmail, changePassword, sendEmail, remove, signOut;
+            changeEmail, changePassword, sendEmail, remove, signOut,btnAccountDetails;
     private Button userName;
     private EditText oldEmail, newEmail, password, newPassword;
     private ProgressBar progressBar;
     private FirebaseAuth.AuthStateListener authListener;
     private FirebaseAuth auth;
+    String oldEmailString;
+    boolean isUpdated=false;
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myref = database.getReference("studentsUsers");
+    String userId;
+    String userUSN,userPass,userAddr,userGender,userPhone,uName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         btnChangePassword = (Button) findViewById(R.id.change_password_button);
         btnSendResetEmail = (Button) findViewById(R.id.sending_pass_reset_button);
         btnRemoveUser = (Button) findViewById(R.id.remove_user_button);
+        btnAccountDetails=(Button)findViewById(R.id.userdetails);
         changeEmail = (Button) findViewById(R.id.changeEmail);
         changePassword = (Button) findViewById(R.id.changePass);
         sendEmail = (Button) findViewById(R.id.send);
@@ -90,7 +102,15 @@ public class MainActivity extends AppCompatActivity {
         if (progressBar != null) {
             progressBar.setVisibility(View.GONE);
         }
-
+        btnAccountDetails.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent accountDet=new Intent(getApplicationContext(), AccountDetails.class);
+                accountDet.putExtra("caller","StudentLogin");
+                startActivity(accountDet);
+                finish();
+            }
+        });
         btnChangeEmail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -110,13 +130,43 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 progressBar.setVisibility(View.VISIBLE);
                 if (user != null && !newEmail.getText().toString().trim().equals("")) {
+                    oldEmailString=user.getEmail();
                     user.updateEmail(newEmail.getText().toString().trim())
                             .addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
+
                                     if (task.isSuccessful()) {
+                                        try {
+                                            myref.orderByChild("studentEmail").equalTo(oldEmailString).addListenerForSingleValueEvent(new ValueEventListener() {
+                                                @Override
+                                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                                    for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                                                        HashMap<String, String> studDetails = (HashMap) childDataSnapshot.getValue();
+                                                        uName = studDetails.get("studentName");
+                                                        userId = studDetails.get("studentUserId");
+                                                        userUSN = studDetails.get("studentUSN");
+                                                        userPass = studDetails.get("studentPass");
+                                                        userAddr = studDetails.get("studentAddr");
+                                                        userGender = studDetails.get("studentGender");
+                                                        userPhone = studDetails.get("studentPhno");
+                                                    }
+                                                    StudentUser UpdatedStudentUser = new StudentUser(userId, uName, newEmail.getText().toString().trim(), userPass, userUSN, userAddr, userPhone, userGender);
+                                                    myref.child(userId).setValue(UpdatedStudentUser);
+                                                    signOut();
+                                                }
+
+                                                @Override
+                                                public void onCancelled(DatabaseError databaseError) {
+                                                    //do nothing, do not update if error
+                                                }
+                                            });
+                                        } catch (Exception e) {
+                                            // e.printStackTrace();
+                                        }
                                         Toast.makeText(MainActivity.this, "Email address is updated. Please sign in with new email id!", Toast.LENGTH_LONG).show();
-                                        signOut();
+                                        //signOut();
+                                        isUpdated=true;
                                         progressBar.setVisibility(View.GONE);
                                     } else {
                                         Toast.makeText(MainActivity.this, "Failed to update email!", Toast.LENGTH_LONG).show();
@@ -127,6 +177,10 @@ public class MainActivity extends AppCompatActivity {
                 } else if (newEmail.getText().toString().trim().equals("")) {
                     newEmail.setError("Enter email");
                     progressBar.setVisibility(View.GONE);
+                }
+                if(isUpdated==true) {
+                    System.out.println("hello");
+
                 }
             }
         });
