@@ -37,12 +37,14 @@
     <string name="address">Address</string>
     <string name="pnone">Phone</string>
     <string name="gender">Male/Female</string>
-    <string name="userName" >Hello </string>
-    <string name="uName" >User Name </string>
+    <string name="userName">Hello </string>
+    <string name="uName">User Name </string>
+    <string name="btn_user_details">Show Account Details</string>
     <array name="gender">
         <item>Male</item>
         <item>Female</item>
 
     </array>
+    <string name="title_activity_account_detials">AccountDetials</string>
 
 </resources>

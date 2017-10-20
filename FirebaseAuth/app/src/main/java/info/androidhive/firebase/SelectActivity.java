@@ -29,6 +29,8 @@ public class SelectActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Start the Signup activity for Student
                 Intent intent = new Intent(SelectActivity.this, LoginActivity.class);
+                intent.putExtra("previous","select");
+                intent.putExtra("caller","StudentLogin");
                 startActivity(intent);
             }
         });

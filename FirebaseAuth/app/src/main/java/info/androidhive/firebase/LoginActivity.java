@@ -32,7 +32,9 @@ public class LoginActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
 
         if (auth.getCurrentUser() != null) {
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            Intent intent=new Intent(LoginActivity.this, MainActivity.class);
+            intent.putExtra("caller",getIntent().getStringExtra("caller"));
+            startActivity(intent);
             finish();
         }
 
@@ -55,7 +57,15 @@ public class LoginActivity extends AppCompatActivity {
         btnSignup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(LoginActivity.this, StudentLogin.class));
+                //work around for scenario when user signs out then clicks Register. Then we will redirect to Select and start flow again so it is consistent
+                if(getIntent().getStringExtra("previous")!=null&&getIntent().getStringExtra("previous").equals("select")&&getIntent().getStringExtra("caller").equals("StudentLogin")) {
+                    Intent intent = new Intent(LoginActivity.this, StudentLogin.class);
+                    intent.putExtra("caller", getIntent().getStringExtra("caller"));
+                    startActivity(intent);
+                }
+                else{
+                    startActivity(new Intent(LoginActivity.this,SelectActivity.class));
+                }
             }
         });
 
@@ -102,6 +112,7 @@ public class LoginActivity extends AppCompatActivity {
                                     }
                                 } else {
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                    intent.putExtra("caller",getIntent().getStringExtra("caller"));
                                     startActivity(intent);
                                     finish();
                                 }

@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent accountDet=new Intent(getApplicationContext(), AccountDetails.class);
-                accountDet.putExtra("caller","StudentLogin");
+                accountDet.putExtra("caller",getIntent().getStringExtra("caller"));
                 startActivity(accountDet);
                 finish();
             }

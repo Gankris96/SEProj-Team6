@@ -30,7 +30,7 @@ public class AccountDetails extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_account_detials);
-        String loginFrom=getIntent().getStringExtra("caller");
+        final String loginFrom=getIntent().getStringExtra("caller");
         uName=(TextView)findViewById(R.id.uname);
         uEmail=(TextView)findViewById(R.id.uemail);
         uUsn=(TextView)findViewById(R.id.uusn);
@@ -41,20 +41,22 @@ public class AccountDetails extends AppCompatActivity {
 
 
         auth=FirebaseAuth.getInstance();
-        final String uid=auth.getCurrentUser().getUid();
-
         firebaseDatabase=FirebaseDatabase.getInstance();
-        databaseReference=firebaseDatabase.getReference("studentsUsers");
+        if(getIntent().getStringExtra("caller").equals("StudentLogin")){
+            databaseReference=firebaseDatabase.getReference("studentsUsers");
+        }
         databaseReference.orderByChild("studentEmail").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot childDataSnapshot:dataSnapshot.getChildren()){
                     HashMap<String,String> studDetails=(HashMap)childDataSnapshot.getValue();
-                    uName.setText("HELLO "+studDetails.get("studentName"));
-                    uAddr.setText("ADDRESS "+studDetails.get("studentAddr"));
-                    uPhno.setText("PHONE "+studDetails.get("studentPhno"));
-                    uUsn.setText("USN "+studDetails.get("studentUSN"));
-                    uGender.setText("Gender "+studDetails.get("studentGender"));
+                    if(loginFrom.equals("StudentLogin")) {
+                        uName.setText("HELLO " + studDetails.get("studentName"));
+                        uAddr.setText("ADDRESS " + studDetails.get("studentAddr"));
+                        uPhno.setText("PHONE " + studDetails.get("studentPhno"));
+                        uUsn.setText("USN " + studDetails.get("studentUSN"));
+                        uGender.setText("Gender " + studDetails.get("studentGender"));
+                    }
                 }
             }
 
