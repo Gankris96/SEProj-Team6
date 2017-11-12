@@ -46,5 +46,7 @@
 
     </array>
     <string name="title_activity_account_detials">AccountDetials</string>
+    <string name="maps_display">Maps</string>
+    <string name="title_activity_maps">MapsActivity</string>
 
 </resources>

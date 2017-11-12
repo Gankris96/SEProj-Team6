@@ -26,7 +26,7 @@ import java.util.HashMap;
 public class MainActivity extends AppCompatActivity {
 
     private Button btnChangeEmail, btnChangePassword, btnSendResetEmail, btnRemoveUser,
-            changeEmail, changePassword, sendEmail, remove, signOut,btnAccountDetails;
+            changeEmail, changePassword, sendEmail, remove, signOut,btnAccountDetails,btnmaps;
     private Button userName;
     private EditText oldEmail, newEmail, password, newPassword;
     private ProgressBar progressBar;
@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-
+        btnmaps=(Button) findViewById(R.id.maps);
         btnChangeEmail = (Button) findViewById(R.id.change_email_button);
         btnChangePassword = (Button) findViewById(R.id.change_password_button);
         btnSendResetEmail = (Button) findViewById(R.id.sending_pass_reset_button);
@@ -102,6 +102,16 @@ public class MainActivity extends AppCompatActivity {
         if (progressBar != null) {
             progressBar.setVisibility(View.GONE);
         }
+        btnmaps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent mapIntent=new Intent(getApplicationContext(), MapsActivity.class);
+                //mapIntent.putExtra("caller",getIntent().getStringExtra("caller"));
+                startActivity(mapIntent);
+                finish();
+            }
+        });
+
         btnAccountDetails.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
