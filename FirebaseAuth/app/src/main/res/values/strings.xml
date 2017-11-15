@@ -48,5 +48,7 @@
     <string name="title_activity_account_detials">AccountDetials</string>
     <string name="maps_display">Maps</string>
     <string name="title_activity_maps">MapsActivity</string>
+    <string name="title_activity_parent_login">ParentLoginActivity</string>
+    <string name="childUsn">Child\'s USN</string>
 
 </resources>

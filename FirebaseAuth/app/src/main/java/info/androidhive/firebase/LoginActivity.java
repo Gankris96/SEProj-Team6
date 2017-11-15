@@ -24,6 +24,7 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private Button btnSignup, btnLogin, btnReset;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,11 +32,30 @@ public class LoginActivity extends AppCompatActivity {
         //Get Firebase auth instance
         auth = FirebaseAuth.getInstance();
 
+        //work around for signout and signin
+        if(MainActivity.signedOut==1){
+            //MainActivity.signedOut=0;
+            startActivity(new Intent(LoginActivity.this,SelectActivity.class));
+        }
+        //if current User has not logged out then the state will be retained and next time he opens the app it will open home page
         if (auth.getCurrentUser() != null) {
-            Intent intent=new Intent(LoginActivity.this, MainActivity.class);
-            intent.putExtra("caller",getIntent().getStringExtra("caller"));
-            startActivity(intent);
-            finish();
+            if(SelectActivity.count==0){
+                auth.signOut();
+            }
+
+            if(getIntent().getStringExtra("caller").equals("StudentLogin")) {
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                intent.putExtra("caller", getIntent().getStringExtra("caller"));
+                startActivity(intent);
+                finish();
+            }
+            else if(getIntent().getStringExtra("caller").equals("ParentLogin")) {
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                intent.putExtra("caller", getIntent().getStringExtra("caller"));
+                startActivity(intent);
+                finish();
+            }
+           // auth.signOut();
         }
 
         // set the view now
@@ -62,6 +82,12 @@ public class LoginActivity extends AppCompatActivity {
                     Intent intent = new Intent(LoginActivity.this, StudentLogin.class);
                     intent.putExtra("caller", getIntent().getStringExtra("caller"));
                     startActivity(intent);
+                }
+                else if(getIntent().getStringExtra("previous")!=null&&getIntent().getStringExtra("previous").equals("select")&&getIntent().getStringExtra("caller").equals("ParentLogin")) {
+                    Intent intent = new Intent(LoginActivity.this, ParentLoginActivity.class);
+                    intent.putExtra("caller", getIntent().getStringExtra("caller"));
+                    startActivity(intent);
+
                 }
                 else{
                     startActivity(new Intent(LoginActivity.this,SelectActivity.class));

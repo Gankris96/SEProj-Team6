@@ -5,20 +5,26 @@ package info.androidhive.firebase;
  */
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -31,6 +37,13 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONObject;
 
@@ -44,27 +57,83 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static info.androidhive.firebase.Map.animateMarker;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
-
+    String userID;
+    String childUSN;
+    LocationListener locationListener;
+    LocationMark locationMark;
     private GoogleMap mMap;
     ArrayList<LatLng> MarkerPoints;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     Marker mCurrLocationMarker;
+    Marker mTrackStudent;
     LocationRequest mLocationRequest;
-
+    private FirebaseAuth.AuthStateListener authListener;
+    private FirebaseAuth auth;
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    //this part may require If wrapper for studentUsers or DriverUsers based on flow
+    DatabaseReference myref;
+    DatabaseReference myParentRef;
+    DatabaseReference databaseLatLng;
+    DatabaseReference databaseReference;
+    LatLng latLng;
+    String loginFrom;
+    double latTrack;
+    double lngTrack;
+    BitmapDrawable bitmapdraw;
+    Bitmap b;
+    int height;
+    int width;
+    Bitmap smallMarker;
+    boolean usnGot;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
+        auth = FirebaseAuth.getInstance();
+        databaseLatLng = FirebaseDatabase.getInstance().getReference("UserLatLngData");
+        myref = database.getReference("studentsUsers");
+        myParentRef=FirebaseDatabase.getInstance().getReference("UserLatLngData");
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String emailID = user.getEmail();
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkLocationPermission();
         }
+
         // Initializing
+        usnGot=false;
+        bitmapdraw = (BitmapDrawable) getResources().getDrawable(R.mipmap.icon_car);
+        b = bitmapdraw.getBitmap();
+        height = 80;
+        width = 45;
+        smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
+
+        loginFrom=getIntent().getStringExtra("caller");
+        if(loginFrom.equals("ParentLogin")){
+            databaseReference = database.getReference("parentUsers");
+            databaseReference.orderByChild("email").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                        HashMap<String, String> studDetails = (HashMap) childDataSnapshot.getValue();
+                        userID = studDetails.get("usn");
+                        usnGot = true;
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+        }
         MarkerPoints = new ArrayList<>();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -95,10 +164,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.setMyLocationEnabled(true);
 
             }
-        }
-        else {
+        } else {
             buildGoogleApiClient();
             mMap.setMyLocationEnabled(true);
+
         }
 
         // Setting onclick event listener for the map
@@ -130,13 +199,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                 } else if (MarkerPoints.size() == 2) {
                     options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-                }
-                else if(MarkerPoints.size()==3){
+                } else if (MarkerPoints.size() == 3) {
                     options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
-                }
-                else if(MarkerPoints.size()==4){
+                } else if (MarkerPoints.size() == 4) {
                     options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
-                }else if(MarkerPoints.size()==5){
+                } else if (MarkerPoints.size() == 5) {
                     options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
                 }
 
@@ -166,10 +233,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         FetchUrl = new FetchUrl();
                         // Start downloading json data from Google Directions API
                         FetchUrl.execute(url);
+
                     }
                     //move map camera
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(origin));
                     mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+                    //onLocationChanged(Location location);
+                    ParserTask parse = new ParserTask();
                 }
 
             }
@@ -288,17 +358,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             try {
                 jObject = new JSONObject(jsonData[0]);
-                Log.d("ParserTask",jsonData[0].toString());
+                Log.d("ParserTask", jsonData[0].toString());
                 DataParser parser = new DataParser();
                 Log.d("ParserTask", parser.toString());
 
                 // Starts parsing data
                 routes = parser.parse(jObject);
-                Log.d("ParserTask","Executing routes");
-                Log.d("ParserTask",routes.toString());
+                Log.d("ParserTask", "Executing routes");
+                Log.d("ParserTask", routes.toString());
 
             } catch (Exception e) {
-                Log.d("ParserTask",e.toString());
+                Log.d("ParserTask", e.toString());
                 e.printStackTrace();
             }
             return routes;
@@ -334,20 +404,51 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 lineOptions.width(10);
                 lineOptions.color(Color.RED);
 
-                Log.d("onPostExecute","onPostExecute lineoptions decoded");
+                Log.d("onPostExecute", "onPostExecute lineoptions decoded");
 
             }
 
             // Drawing polyline in the Google Map for the i-th route
-            if(lineOptions != null) {
+            if (lineOptions != null) {
                 mMap.addPolyline(lineOptions);
-            }
-            else {
-                Log.d("onPostExecute","without Polylines drawn");
+            } else {
+                Log.d("onPostExecute", "without Polylines drawn");
             }
         }
     }
 
+    protected void getTrackingUpdates() {
+        //databaseLatLng.child(userID).child("latitude");
+               databaseLatLng.orderByChild("userID").equalTo(userID).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for(DataSnapshot chiDataSnapshot1:dataSnapshot.getChildren()){
+                            HashMap<String, HashMap<String,String>> studDetails = (HashMap) dataSnapshot.getValue();
+                            //TODO get the lat and lng values and update the tracker Marker
+                            studDetails.get("01FB14ECS073");
+                            //extract latitude and longitude
+                        }
+                        //Set the marker on the map which represents the students location
+                        //latTrack = Double.parseDouble(studDetails.get("latitude"));
+                        //lngTrack = Double.parseDouble(studDetails.get("longitude"));
+//                        MarkerOptions markerTrack = new MarkerOptions();
+//                        markerTrack.position(new LatLng(latTrack, lngTrack));
+//                        markerTrack.title("Tracking Location");
+//                        markerTrack.icon(BitmapDescriptorFactory.fromBitmap((smallMarker)));
+//                        mTrackStudent = mMap.addMarker(markerTrack);
+
+                        //restart the process in a loop to stop and start. Update
+                        buildGoogleApiClient();
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+    }
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -362,12 +463,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(1000);
-        mLocationRequest.setFastestInterval(1000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        mLocationRequest.setFastestInterval(100);
+        mLocationRequest.setSmallestDisplacement(0f);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            //LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,mLocationRequest,locationListener,onLocationChanged());
         }
 
     }
@@ -379,31 +482,65 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onLocationChanged(Location location) {
-
+        //Toast.makeText(getApplicationContext(), "Location Updatedabc!", Toast.LENGTH_SHORT).show();
         mLastLocation = location;
         if (mCurrLocationMarker != null) {
+            //Toast.makeText(getApplicationContext(), "Location Updated !", Toast.LENGTH_SHORT).show();
             mCurrLocationMarker.remove();
         }
-
         //Place current location marker
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        //Toast.makeText(getApplicationContext(), "" + mLastLocation2.getLatitude() + ":" + mLastLocation2.getLongitude(), Toast.LENGTH_SHORT).show();
+         latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
+        //Toast.makeText(getApplicationContext(), "Location Updated123 !", Toast.LENGTH_SHORT).show();
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
-        mCurrLocationMarker = mMap.addMarker(markerOptions);
+        //markerOptions.icon(BitmapDescriptorFactory.fromBitmap((smallMarker)));
 
-        //move map camera
+        //Get the user details i.e userID for tracking
+
+        if(loginFrom.equals("StudentLogin")&&auth.getCurrentUser()!=null) {
+
+            myref.orderByChild("studentEmail").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if(auth.getCurrentUser()!=null) {
+                        for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                            HashMap<String, String> studDetails = (HashMap) childDataSnapshot.getValue();
+                            userID = studDetails.get("studentUSN");
+                        }
+                        locationMark = new LocationMark(userID, latLng.latitude, latLng.longitude);
+                        databaseLatLng.child(userID).setValue(locationMark);
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+        }
+        else if(loginFrom.equals("ParentLogin")&&auth.getCurrentUser()!=null) {
+            getTrackingUpdates();
+        }
+        //String key=userID;
+        mCurrLocationMarker = mMap.addMarker(markerOptions);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
 
         //stop location updates
-        if (mGoogleApiClient != null) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        }
 
+        if ((mGoogleApiClient != null&&auth.getCurrentUser()==null)||loginFrom.equals("ParentLogin")) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            //getTrackingUpdates();
+        }
+            //continue to get updates
     }
+
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {

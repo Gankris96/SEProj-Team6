@@ -42,9 +42,9 @@ public class AccountDetails extends AppCompatActivity {
 
         auth=FirebaseAuth.getInstance();
         firebaseDatabase=FirebaseDatabase.getInstance();
-        if(getIntent().getStringExtra("caller").equals("StudentLogin")){
+        if(loginFrom.equals("StudentLogin")){
             databaseReference=firebaseDatabase.getReference("studentsUsers");
-        }
+            //get Student Details
         databaseReference.orderByChild("studentEmail").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -65,9 +65,41 @@ public class AccountDetails extends AppCompatActivity {
 
             }
         });
+
+        }
+        else if(loginFrom.equals("ParentLogin")){
+            databaseReference=firebaseDatabase.getReference("parentUsers");
+            databaseReference.orderByChild("email").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for(DataSnapshot childDataSnapshot:dataSnapshot.getChildren()){
+                        HashMap<String,String> studDetails=(HashMap)childDataSnapshot.getValue();
+                        if(loginFrom.equals("ParentLogin")){
+                            uName.setText("HELLO " + studDetails.get("email"));
+                            uUsn.setText("Child USN " + studDetails.get("usn"));
+                            uAddr.setVisibility(View.GONE);
+                            uPhno.setVisibility(View.GONE);
+                            uGender.setVisibility(View.GONE);
+
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+        }
         if(loginFrom.equals("StudentLogin")){
 
-            String text1="User Details Loading...";
+            String text1="Student User Details Loading...";
+            uName.setText(text1);
+        }
+        else if(loginFrom.equals("ParentLogin")){
+
+            String text1="Parent User Details Loading...";
             uName.setText(text1);
         }
 

@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -35,10 +36,11 @@ public class MainActivity extends AppCompatActivity {
     String oldEmailString;
     boolean isUpdated=false;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
+    //wrap with IF for other user types. SO the .getReference(); will change to driverUsers or parentUsers
     DatabaseReference myref = database.getReference("studentsUsers");
     String userId;
     String userUSN,userPass,userAddr,userGender,userPhone,uName;
-
+    static int signedOut=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent mapIntent=new Intent(getApplicationContext(), MapsActivity.class);
-                //mapIntent.putExtra("caller",getIntent().getStringExtra("caller"));
+                mapIntent.putExtra("caller",getIntent().getStringExtra("caller"));
                 startActivity(mapIntent);
                 finish();
             }
@@ -147,35 +149,64 @@ public class MainActivity extends AppCompatActivity {
                                 public void onComplete(@NonNull Task<Void> task) {
 
                                     if (task.isSuccessful()) {
-                                        try {
-                                            myref.orderByChild("studentEmail").equalTo(oldEmailString).addListenerForSingleValueEvent(new ValueEventListener() {
-                                                @Override
-                                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                                    for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
-                                                        HashMap<String, String> studDetails = (HashMap) childDataSnapshot.getValue();
-                                                        uName = studDetails.get("studentName");
-                                                        userId = studDetails.get("studentUserId");
-                                                        userUSN = studDetails.get("studentUSN");
-                                                        userPass = studDetails.get("studentPass");
-                                                        userAddr = studDetails.get("studentAddr");
-                                                        userGender = studDetails.get("studentGender");
-                                                        userPhone = studDetails.get("studentPhno");
+                                        if(getIntent().getStringExtra("caller").equals("StudentLogin")) {
+                                            try {
+                                                myref.orderByChild("studentEmail").equalTo(oldEmailString).addListenerForSingleValueEvent(new ValueEventListener() {
+                                                    @Override
+                                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                                        for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                                                            HashMap<String, String> studDetails = (HashMap) childDataSnapshot.getValue();
+                                                            uName = studDetails.get("studentName");
+                                                            userId = studDetails.get("studentUserId");
+                                                            userUSN = studDetails.get("studentUSN");
+                                                            userPass = studDetails.get("studentPass");
+                                                            userAddr = studDetails.get("studentAddr");
+                                                            userGender = studDetails.get("studentGender");
+                                                            userPhone = studDetails.get("studentPhno");
+                                                        }
+                                                        StudentUser UpdatedStudentUser = new StudentUser(userId, uName, newEmail.getText().toString().trim(), userPass, userUSN, userAddr, userPhone, userGender);
+                                                        myref.child(userUSN).setValue(UpdatedStudentUser);
+                                                        signOut();
                                                     }
-                                                    StudentUser UpdatedStudentUser = new StudentUser(userId, uName, newEmail.getText().toString().trim(), userPass, userUSN, userAddr, userPhone, userGender);
-                                                    myref.child(userId).setValue(UpdatedStudentUser);
-                                                    signOut();
-                                                }
 
-                                                @Override
-                                                public void onCancelled(DatabaseError databaseError) {
-                                                    //do nothing, do not update if error
-                                                }
-                                            });
-                                        } catch (Exception e) {
-                                            // e.printStackTrace();
-                                        }
+                                                    @Override
+                                                    public void onCancelled(DatabaseError databaseError) {
+                                                        //do nothing, do not update if error
+                                                    }
+                                                });
+                                            } catch (Exception e) {
+                                                // e.printStackTrace();
+                                            }
+
                                         Toast.makeText(MainActivity.this, "Email address is updated. Please sign in with new email id!", Toast.LENGTH_LONG).show();
                                         //signOut();
+                                        }
+                                        else if(getIntent().getStringExtra("caller").equals("ParentLogin")) {
+                                            try {
+                                                myref.child("email").addListenerForSingleValueEvent(new ValueEventListener() {
+                                                    @Override
+                                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                                        for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                                                            HashMap<String, String> parentDetails = (HashMap) childDataSnapshot.getValue();
+                                                            userId=parentDetails.get("usn");
+                                                        }
+                                                        ParentUser parentUserUpdate = new ParentUser( newEmail.getText().toString().trim(),userId);
+                                                        myref.child(userId).setValue(parentUserUpdate);
+                                                        signOut();
+                                                    }
+
+                                                    @Override
+                                                    public void onCancelled(DatabaseError databaseError) {
+                                                        //do nothing, do not update if error
+                                                    }
+                                                });
+                                            } catch (Exception e) {
+                                                // e.printStackTrace();
+                                            }
+
+                                            Toast.makeText(MainActivity.this, "Email address is updated. Please sign in with new email id!", Toast.LENGTH_LONG).show();
+                                            //signOut();
+                                        }
                                         isUpdated=true;
                                         progressBar.setVisibility(View.GONE);
                                     } else {
@@ -307,6 +338,7 @@ public class MainActivity extends AppCompatActivity {
         signOut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //SelectActivity.count=-1;
                 signOut();
             }
         });
@@ -315,6 +347,7 @@ public class MainActivity extends AppCompatActivity {
 
     //sign out method
     public void signOut() {
+        signedOut=1;
         auth.signOut();
     }
 
