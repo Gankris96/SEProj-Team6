@@ -14,6 +14,9 @@ public class SelectActivity extends AppCompatActivity {
     Button _selectstudent;
     Button _selectdriver;
     Button _selectparent;
+    static int count=-1;
+    static int signOutCount=0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,16 +25,29 @@ public class SelectActivity extends AppCompatActivity {
         _selectstudent=(Button)findViewById(R.id.btn_student_login) ;
         _selectdriver=(Button)findViewById(R.id.btn_driver_login) ;
         _selectparent=(Button)findViewById(R.id.btn_parent_login) ;
+        if(MainActivity.signedOut==1){
+            MainActivity.signedOut=0;
+            signOutCount++;
+            _selectdriver.setVisibility(View.VISIBLE);
+            _selectparent.setVisibility(View.VISIBLE);
+            _selectstudent.setVisibility(View.VISIBLE);
+        }
 
         _selectstudent.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 // Start the Signup activity for Student
+
+                _selectdriver.setVisibility(View.GONE);
+                _selectparent.setVisibility(View.GONE);
                 Intent intent = new Intent(SelectActivity.this, LoginActivity.class);
+                count++;
                 intent.putExtra("previous","select");
                 intent.putExtra("caller","StudentLogin");
                 startActivity(intent);
+
+
             }
         });
 
@@ -50,7 +66,12 @@ public class SelectActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Start the Signup activity for Student
+                _selectdriver.setVisibility(View.GONE);
+                _selectstudent.setVisibility(View.GONE);
                 Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                count++;
+                intent.putExtra("previous","select");
+                intent.putExtra("caller","ParentLogin");
                 startActivity(intent);
             }
         });
