@@ -5,6 +5,7 @@ package info.androidhive.firebase;
  */
 
 import android.Manifest;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -20,6 +21,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -57,8 +59,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static info.androidhive.firebase.Map.animateMarker;
-
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -92,11 +92,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     int width;
     Bitmap smallMarker;
     boolean usnGot;
+    boolean track;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         auth = FirebaseAuth.getInstance();
+        track=false;
         databaseLatLng = FirebaseDatabase.getInstance().getReference("UserLatLngData");
         myref = database.getReference("studentsUsers");
         myParentRef=FirebaseDatabase.getInstance().getReference("UserLatLngData");
@@ -161,6 +163,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
                 buildGoogleApiClient();
+
                 mMap.setMyLocationEnabled(true);
 
             }
@@ -417,29 +420,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    protected void getTrackingUpdates() {
+    protected void getTrackingUpdates(DatabaseReference datRefObj) {
+        final DatabaseReference dat=datRefObj;
         //databaseLatLng.child(userID).child("latitude");
-               databaseLatLng.orderByChild("userID").equalTo(userID).addListenerForSingleValueEvent(new ValueEventListener() {
+        String lat;
+        String lng;
+               dat.orderByChild("userID").equalTo(userID).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         for(DataSnapshot chiDataSnapshot1:dataSnapshot.getChildren()){
-                            HashMap<String, HashMap<String,String>> studDetails = (HashMap) dataSnapshot.getValue();
+                            LocationMark locationMark = chiDataSnapshot1.getValue(LocationMark.class);
+                            locationMark.getLatitude();
+
                             //TODO get the lat and lng values and update the tracker Marker
-                            studDetails.get("01FB14ECS073");
+                            //LocationMark locationMark=studDetails.get("01FB14ECS073");
+
+                            latTrack= Double.parseDouble(String.valueOf(locationMark.getLatitude()));
+                            lngTrack= Double.parseDouble(String.valueOf(locationMark.getLongitude()));
                             //extract latitude and longitude
                         }
-                        //Set the marker on the map which represents the students location
-                        //latTrack = Double.parseDouble(studDetails.get("latitude"));
-                        //lngTrack = Double.parseDouble(studDetails.get("longitude"));
-//                        MarkerOptions markerTrack = new MarkerOptions();
-//                        markerTrack.position(new LatLng(latTrack, lngTrack));
-//                        markerTrack.title("Tracking Location");
-//                        markerTrack.icon(BitmapDescriptorFactory.fromBitmap((smallMarker)));
-//                        mTrackStudent = mMap.addMarker(markerTrack);
-
+                        track=true;
                         //restart the process in a loop to stop and start. Update
-                        buildGoogleApiClient();
-
+                        //buildGoogleApiClient();
+                        dat.onDisconnect();
                     }
 
                     @Override
@@ -493,11 +496,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
          latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
         //Toast.makeText(getApplicationContext(), "Location Updated123 !", Toast.LENGTH_SHORT).show();
+
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
         //markerOptions.icon(BitmapDescriptorFactory.fromBitmap((smallMarker)));
+
 
         //Get the user details i.e userID for tracking
 
@@ -525,16 +530,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
         else if(loginFrom.equals("ParentLogin")&&auth.getCurrentUser()!=null) {
-            getTrackingUpdates();
+            getTrackingUpdates(FirebaseDatabase.getInstance().getReference("UserLatLngData"));
         }
         //String key=userID;
-        mCurrLocationMarker = mMap.addMarker(markerOptions);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+        if(!loginFrom.equals("ParentLogin")) {
+            mCurrLocationMarker = mMap.addMarker(markerOptions);
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+        }
+        if(track==true) {
+            if(mTrackStudent!=null){
+                mTrackStudent.remove();
+            }
+            MarkerOptions markerTrack = new MarkerOptions();
+            markerTrack.position(new LatLng(latTrack, lngTrack));
+            markerTrack.title("Tracking Location");
+            markerTrack.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(latTrack, lngTrack)));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(19));
+            mTrackStudent = mMap.addMarker(markerTrack);
+            Location location1=new Location("");
+            location1.setLatitude(latTrack);
+            location1.setLongitude(lngTrack);
+            animateMarker(location1,mTrackStudent);
 
+        }
         //stop location updates
 
-        if ((mGoogleApiClient != null&&auth.getCurrentUser()==null)||loginFrom.equals("ParentLogin")) {
+        if ((mGoogleApiClient != null&&auth.getCurrentUser()==null)) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
             //getTrackingUpdates();
         }
@@ -612,4 +635,64 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // You can add here other case statements according to your requirement.
         }
     }
+    public static void animateMarker(final Location destination, final Marker marker) {
+        if (marker != null) {
+            final LatLng startPosition = marker.getPosition();
+            final LatLng endPosition = new LatLng(destination.getLatitude(), destination.getLongitude());
+
+            final float startRotation = marker.getRotation();
+
+            final LatLngInterpolator latLngInterpolator = new LatLngInterpolator.LinearFixed();
+            ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1);
+            valueAnimator.setDuration(1000); // duration 1 second
+            valueAnimator.setInterpolator(new LinearInterpolator());
+            valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override public void onAnimationUpdate(ValueAnimator animation) {
+                    try {
+                        float v = animation.getAnimatedFraction();
+                        LatLng newPosition = latLngInterpolator.interpolate(v, startPosition, endPosition);
+                        marker.setPosition(newPosition);
+                        marker.setRotation(computeRotation(v, startRotation, destination.getBearing()));
+                    } catch (Exception ex) {
+                        // I don't care atm..
+                    }
+                }
+            });
+
+            valueAnimator.start();
+        }
+    }
+    private static float computeRotation(float fraction, float start, float end) {
+        float normalizeEnd = end - start; // rotate start to 0
+        float normalizedEndAbs = (normalizeEnd + 360) % 360;
+
+        float direction = (normalizedEndAbs > 180) ? -1 : 1; // -1 = anticlockwise, 1 = clockwise
+        float rotation;
+        if (direction > 0) {
+            rotation = normalizedEndAbs;
+        } else {
+            rotation = normalizedEndAbs - 360;
+        }
+
+        float result = fraction * rotation + start;
+        return (result + 360) % 360;
+    }
+    private interface LatLngInterpolator {
+        LatLng interpolate(float fraction, LatLng a, LatLng b);
+
+        class LinearFixed implements LatLngInterpolator {
+            @Override
+            public LatLng interpolate(float fraction, LatLng a, LatLng b) {
+                double lat = (b.latitude - a.latitude) * fraction + a.latitude;
+                double lngDelta = b.longitude - a.longitude;
+                // Take the shortest path across the 180th meridian.
+                if (Math.abs(lngDelta) > 180) {
+                    lngDelta -= Math.signum(lngDelta) * 360;
+                }
+                double lng = lngDelta * fraction + a.longitude;
+                return new LatLng(lat, lng);
+            }
+        }
+    }
+
 }
