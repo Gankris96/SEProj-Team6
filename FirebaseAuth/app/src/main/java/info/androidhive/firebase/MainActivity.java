@@ -1,5 +1,7 @@
 package info.androidhive.firebase;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -40,7 +42,12 @@ public class MainActivity extends AppCompatActivity {
     DatabaseReference myref = database.getReference("studentsUsers");
     String userId;
     String userUSN,userPass,userAddr,userGender,userPhone,uName;
+    Boolean busAlloc;
     static int signedOut=0;
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         btnmaps=(Button) findViewById(R.id.maps);
-        btnChangeEmail = (Button) findViewById(R.id.change_email_button);
+        btnChangeEmail = (Button) findViewById(R.id.allocate_bus);
         btnChangePassword = (Button) findViewById(R.id.change_password_button);
         btnSendResetEmail = (Button) findViewById(R.id.sending_pass_reset_button);
         btnRemoveUser = (Button) findViewById(R.id.remove_user_button);
@@ -98,6 +105,42 @@ public class MainActivity extends AppCompatActivity {
         changePassword.setVisibility(View.GONE);
         sendEmail.setVisibility(View.GONE);
         remove.setVisibility(View.GONE);
+        //Toast.makeText(MainActivity.this, getIntent().getStringExtra("caller"), Toast.LENGTH_SHORT).show();
+        if((getIntent().getStringExtra("caller").equals("StudentLogin")) && (getIntent().getStringExtra("loggedIn").equals("true"))) { //signupBtn = yes/no based on busAllocate=no/yes
+            Toast.makeText(MainActivity.this, user.getEmail(), Toast.LENGTH_SHORT).show();
+            try {
+                myref.orderByChild("studentEmail").equalTo(user.getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                            //HashMap<String, String> studDetails = (HashMap) childDataSnapshot.getValue();
+                            StudentUser temp = childDataSnapshot.getValue(StudentUser.class);
+                            busAlloc =  temp.getAllocationStatus();
+                            Toast.makeText(MainActivity.this, String.valueOf(busAlloc), Toast.LENGTH_SHORT).show();
+                            if(busAlloc)
+                                btnChangeEmail.setVisibility(View.GONE);
+
+                            else
+                                btnChangeEmail.setVisibility(View.VISIBLE);
+
+                        }
+
+                        }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        //do nothing, do not update if error
+                    }
+                });
+            } catch (Exception e) {
+                // e.printStackTrace();
+            }
+        }
+        else{
+            Toast.makeText(MainActivity.this, "not a student", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, getIntent().getStringExtra("caller"), Toast.LENGTH_SHORT).show();
+        }
+
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
@@ -126,6 +169,16 @@ public class MainActivity extends AppCompatActivity {
         btnChangeEmail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /*String newString;
+
+                Bundle extras = getIntent().getExtras();
+                if(extras == null) {
+                    newString= null;
+                } else {
+                    newString= extras.getString("caller");
+                }
+
+                Toast.makeText(MainActivity.this, newString, Toast.LENGTH_SHORT).show();
                 oldEmail.setVisibility(View.GONE);
                 newEmail.setVisibility(View.VISIBLE);
                 password.setVisibility(View.GONE);
@@ -133,7 +186,38 @@ public class MainActivity extends AppCompatActivity {
                 changeEmail.setVisibility(View.VISIBLE);
                 changePassword.setVisibility(View.GONE);
                 sendEmail.setVisibility(View.GONE);
-                remove.setVisibility(View.GONE);
+
+
+                remove.setVisibility(View.GONE);*/
+                try {
+                    myref.orderByChild("studentEmail").equalTo(user.getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                                //HashMap<String, String> studDetails = (HashMap) childDataSnapshot.getValue();
+                                StudentUser temp = childDataSnapshot.getValue(StudentUser.class);
+
+                                busAlloc =  temp.getAllocationStatus();
+                                Toast.makeText(MainActivity.this, temp.getStudentUSN(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this, String.valueOf(busAlloc), Toast.LENGTH_SHORT).show();
+                                temp.setAllocationStatus(true);
+                                myref.child(temp.getStudentUSN()).setValue(temp);
+                                btnChangeEmail.setVisibility(View.GONE);
+                            }
+
+
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            //do nothing, do not update if error
+                        }
+                    });
+                } catch (Exception e) {
+                    // e.printStackTrace();
+                }
+
             }
         });
 
@@ -164,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
                                                             userGender = studDetails.get("studentGender");
                                                             userPhone = studDetails.get("studentPhno");
                                                         }
-                                                        StudentUser UpdatedStudentUser = new StudentUser(userId, uName, newEmail.getText().toString().trim(), userPass, userUSN, userAddr, userPhone, userGender);
+                                                        StudentUser UpdatedStudentUser = new StudentUser(userId, uName, newEmail.getText().toString().trim(), userPass, userUSN, userAddr, userPhone, userGender, true);
                                                         myref.child(userUSN).setValue(UpdatedStudentUser);
                                                         signOut();
                                                     }

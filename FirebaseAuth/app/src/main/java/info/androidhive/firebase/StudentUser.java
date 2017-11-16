@@ -13,11 +13,12 @@ public class StudentUser {
     String studentAddr;
     String studentPhno;
     String studentGender;
+    Boolean busAllocated;
 
     public StudentUser(){
 
     }
-    public StudentUser(String studentUserId, String studentName, String studentEmail, String studentPass, String studentUSN, String studentAddr, String studentPhno, String studentGender) {
+    public StudentUser(String studentUserId, String studentName, String studentEmail, String studentPass, String studentUSN, String studentAddr, String studentPhno, String studentGender, Boolean busAllocated) {
         this.studentUserId = studentUserId;
         this.studentName = studentName;
         this.studentEmail = studentEmail;
@@ -26,6 +27,7 @@ public class StudentUser {
         this.studentAddr = studentAddr;
         this.studentPhno = studentPhno;
         this.studentGender = studentGender;
+        this.busAllocated = busAllocated;
     }
 
     public String getStudentUserId() {
@@ -91,4 +93,11 @@ public class StudentUser {
     public void setStudentGender(String studentGender) {
         this.studentGender = studentGender;
     }
+
+    public Boolean getAllocationStatus() {
+        return busAllocated;
+    }
+
+    public void setAllocationStatus(Boolean status) { this.busAllocated = status; }
+
 }

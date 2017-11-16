@@ -142,6 +142,7 @@ public class StudentLogin extends AppCompatActivity {
                                 } else {
                                     Intent studentIntent=new Intent(getApplicationContext(), MainActivity.class);
                                     studentIntent.putExtra("caller","StudentLogin");
+                                    studentIntent.putExtra("loggedIn","true");
                                     startActivity(studentIntent);
                                     finish();
                                 }
@@ -149,7 +150,7 @@ public class StudentLogin extends AppCompatActivity {
                         });
                 //Write to DB
                 String studentUserId=databaseStudents.push().getKey();
-                StudentUser studentUser=new StudentUser(studentUserId,name,email,password,usn,area,mobile,gender);
+                StudentUser studentUser=new StudentUser(studentUserId,name,email,password,usn,area,mobile,gender,false);
                 databaseStudents.child(usn).setValue(studentUser);
             }
         });

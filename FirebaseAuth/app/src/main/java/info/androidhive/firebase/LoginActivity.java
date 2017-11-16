@@ -139,6 +139,7 @@ public class LoginActivity extends AppCompatActivity {
                                 } else {
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     intent.putExtra("caller",getIntent().getStringExtra("caller"));
+                                    intent.putExtra("loggedIn","true");
                                     startActivity(intent);
                                     finish();
                                 }
