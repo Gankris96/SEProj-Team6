@@ -532,7 +532,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             });
             //track bus location.
-               // getBusTrackingUpdates();
+               //getBusTrackingUpdates();
         }
         else if(loginFrom.equals("DriverLogin")&&auth.getCurrentUser()!=null) {
 

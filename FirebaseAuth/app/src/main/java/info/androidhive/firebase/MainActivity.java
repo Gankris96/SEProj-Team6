@@ -187,6 +187,10 @@ public class MainActivity extends AppCompatActivity {
                                 myref.child(temp.getStudentUSN()).setValue(temp);
                                 btnAllocateBus.setVisibility(View.GONE);
                             }
+                            Intent allocateBus=new Intent(getApplicationContext(), AllocateBus.class);
+                            allocateBus.putExtra("caller",getIntent().getStringExtra("caller"));
+                            startActivity(allocateBus);
+                            finish();
                         }
 
                         @Override
@@ -197,6 +201,9 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     // e.printStackTrace();
                 }
+
+                //Start the Allocate Bus Intent
+
 
             }
         });

@@ -53,5 +53,8 @@
     <string name="title_activity_driver_signup">DriverSignup</string>
     <string name="bus_rno">Route Number</string>
     <string name="bus_reg">Vehicle Number</string>
+    <string name="title_activity_allocate_bus">allocateBus</string>
+    <string name="allocate_bus">Confirm Allocation</string>
+    <string name="Request_bus">Request For Bus</string>
 
 </resources>

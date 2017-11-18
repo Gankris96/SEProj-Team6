@@ -79,6 +79,10 @@
         <activity
             android:name=".DriverSignup"
             android:label="@string/title_activity_driver_signup"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".AllocateBus"
+            android:label="@string/title_activity_allocate_bus"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 

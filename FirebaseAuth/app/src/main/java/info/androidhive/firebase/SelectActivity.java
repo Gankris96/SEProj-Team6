@@ -56,6 +56,8 @@ public class SelectActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Start the Signup activity for Driver
+                _selectstudent.setVisibility(View.GONE);
+                _selectparent.setVisibility(View.GONE);
                 Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                 count++;
                 intent.putExtra("previous","select");
