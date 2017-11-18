@@ -29,7 +29,7 @@ import java.util.HashMap;
 public class MainActivity extends AppCompatActivity {
 
     private Button btnChangeEmail, btnChangePassword, btnSendResetEmail, btnRemoveUser,
-            changeEmail, changePassword, sendEmail, remove, signOut,btnAccountDetails,btnmaps;
+            changeEmail, changePassword, sendEmail, remove, signOut,btnAccountDetails,btnmaps,btnAllocateBus;
     private Button userName;
     private EditText oldEmail, newEmail, password, newPassword;
     private ProgressBar progressBar;
@@ -81,10 +81,11 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         btnmaps=(Button) findViewById(R.id.maps);
-        btnChangeEmail = (Button) findViewById(R.id.allocate_bus);
+        btnChangeEmail=(Button) findViewById(R.id.change_email_button);
+        btnAllocateBus = (Button) findViewById(R.id.allocate_bus);
         btnChangePassword = (Button) findViewById(R.id.change_password_button);
         btnSendResetEmail = (Button) findViewById(R.id.sending_pass_reset_button);
-        btnRemoveUser = (Button) findViewById(R.id.remove_user_button);
+        //btnRemoveUser = (Button) findViewById(R.id.remove_user_button);
         btnAccountDetails=(Button)findViewById(R.id.userdetails);
         changeEmail = (Button) findViewById(R.id.changeEmail);
         changePassword = (Button) findViewById(R.id.changePass);
@@ -96,7 +97,8 @@ public class MainActivity extends AppCompatActivity {
         newEmail = (EditText) findViewById(R.id.new_email);
         password = (EditText) findViewById(R.id.password);
         newPassword = (EditText) findViewById(R.id.newPassword);
-
+        if(!getIntent().getStringExtra("caller").equals("StudentLogin"))
+            btnAllocateBus.setVisibility(View.GONE);
         oldEmail.setVisibility(View.GONE);
         newEmail.setVisibility(View.GONE);
         password.setVisibility(View.GONE);
@@ -106,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         sendEmail.setVisibility(View.GONE);
         remove.setVisibility(View.GONE);
         //Toast.makeText(MainActivity.this, getIntent().getStringExtra("caller"), Toast.LENGTH_SHORT).show();
-        if((getIntent().getStringExtra("caller").equals("StudentLogin")) && (getIntent().getStringExtra("loggedIn").equals("true"))) { //signupBtn = yes/no based on busAllocate=no/yes
+        if((getIntent().getStringExtra("caller").equals("StudentLogin")) && (LoginActivity.loggedIn==true)) { //signupBtn = yes/no based on busAllocate=no/yes
             Toast.makeText(MainActivity.this, user.getEmail(), Toast.LENGTH_SHORT).show();
             try {
                 myref.orderByChild("studentEmail").equalTo(user.getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -118,10 +120,10 @@ public class MainActivity extends AppCompatActivity {
                             busAlloc =  temp.getAllocationStatus();
                             Toast.makeText(MainActivity.this, String.valueOf(busAlloc), Toast.LENGTH_SHORT).show();
                             if(busAlloc)
-                                btnChangeEmail.setVisibility(View.GONE);
+                                btnAllocateBus.setVisibility(View.GONE);
 
                             else
-                                btnChangeEmail.setVisibility(View.VISIBLE);
+                                btnAllocateBus.setVisibility(View.VISIBLE);
 
                         }
 
@@ -166,29 +168,10 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
         });
-        btnChangeEmail.setOnClickListener(new View.OnClickListener() {
+
+        btnAllocateBus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*String newString;
-
-                Bundle extras = getIntent().getExtras();
-                if(extras == null) {
-                    newString= null;
-                } else {
-                    newString= extras.getString("caller");
-                }
-
-                Toast.makeText(MainActivity.this, newString, Toast.LENGTH_SHORT).show();
-                oldEmail.setVisibility(View.GONE);
-                newEmail.setVisibility(View.VISIBLE);
-                password.setVisibility(View.GONE);
-                newPassword.setVisibility(View.GONE);
-                changeEmail.setVisibility(View.VISIBLE);
-                changePassword.setVisibility(View.GONE);
-                sendEmail.setVisibility(View.GONE);
-
-
-                remove.setVisibility(View.GONE);*/
                 try {
                     myref.orderByChild("studentEmail").equalTo(user.getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -202,11 +185,8 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.makeText(MainActivity.this, String.valueOf(busAlloc), Toast.LENGTH_SHORT).show();
                                 temp.setAllocationStatus(true);
                                 myref.child(temp.getStudentUSN()).setValue(temp);
-                                btnChangeEmail.setVisibility(View.GONE);
+                                btnAllocateBus.setVisibility(View.GONE);
                             }
-
-
-
                         }
 
                         @Override
@@ -220,7 +200,21 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
+        //if user wants to change email
+        btnChangeEmail.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                oldEmail.setVisibility(View.GONE);
+                newEmail.setVisibility(View.VISIBLE);
+                password.setVisibility(View.GONE);
+                newPassword.setVisibility(View.GONE);
+                changeEmail.setVisibility(View.VISIBLE);
+                changePassword.setVisibility(View.GONE);
+                sendEmail.setVisibility(View.GONE);
+                remove.setVisibility(View.GONE);
+            }
+        });
+        //then allow user to type new mailID and click on Change button
         changeEmail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -394,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnRemoveUser.setOnClickListener(new View.OnClickListener() {
+       /* btnRemoveUser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 progressBar.setVisibility(View.VISIBLE);
@@ -417,7 +411,7 @@ public class MainActivity extends AppCompatActivity {
                             });
                 }
             }
-        });
+        });*/
 
         signOut.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -432,6 +426,7 @@ public class MainActivity extends AppCompatActivity {
     //sign out method
     public void signOut() {
         signedOut=1;
+        LoginActivity.loggedIn=false;
         auth.signOut();
     }
 

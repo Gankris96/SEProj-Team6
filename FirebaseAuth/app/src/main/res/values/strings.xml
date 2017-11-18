@@ -50,5 +50,8 @@
     <string name="title_activity_maps">MapsActivity</string>
     <string name="title_activity_parent_login">ParentLoginActivity</string>
     <string name="childUsn">Child\'s USN</string>
+    <string name="title_activity_driver_signup">DriverSignup</string>
+    <string name="bus_rno">Route Number</string>
+    <string name="bus_reg">Vehicle Number</string>
 
 </resources>

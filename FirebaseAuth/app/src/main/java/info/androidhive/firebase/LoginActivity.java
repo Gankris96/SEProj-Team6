@@ -23,6 +23,7 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private ProgressBar progressBar;
     private Button btnSignup, btnLogin, btnReset;
+    static boolean loggedIn=false;
 
 
     @Override
@@ -50,6 +51,12 @@ public class LoginActivity extends AppCompatActivity {
                 finish();
             }
             else if(getIntent().getStringExtra("caller").equals("ParentLogin")) {
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                intent.putExtra("caller", getIntent().getStringExtra("caller"));
+                startActivity(intent);
+                finish();
+            }
+            else if(getIntent().getStringExtra("caller").equals("DriverLogin")) {
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 intent.putExtra("caller", getIntent().getStringExtra("caller"));
                 startActivity(intent);
@@ -88,6 +95,11 @@ public class LoginActivity extends AppCompatActivity {
                     intent.putExtra("caller", getIntent().getStringExtra("caller"));
                     startActivity(intent);
 
+                }
+                else if(getIntent().getStringExtra("previous")!=null&&getIntent().getStringExtra("previous").equals("select")&&getIntent().getStringExtra("caller").equals("DriverLogin")) {
+                    Intent intent = new Intent(LoginActivity.this, DriverSignup.class);
+                    intent.putExtra("caller", getIntent().getStringExtra("caller"));
+                    startActivity(intent);
                 }
                 else{
                     startActivity(new Intent(LoginActivity.this,SelectActivity.class));
@@ -140,6 +152,7 @@ public class LoginActivity extends AppCompatActivity {
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     intent.putExtra("caller",getIntent().getStringExtra("caller"));
                                     intent.putExtra("loggedIn","true");
+                                    loggedIn=true;
                                     startActivity(intent);
                                     finish();
                                 }

@@ -92,6 +92,31 @@ public class AccountDetails extends AppCompatActivity {
             });
 
         }
+        else if(loginFrom.equals("DriverLogin")){
+            databaseReference=firebaseDatabase.getReference("driverUsers");
+            /*databaseReference.orderByChild("email").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for(DataSnapshot childDataSnapshot:dataSnapshot.getChildren()){
+                        DriverUser driverUser=childDataSnapshot.getValue(DriverUser.class);
+                        if(loginFrom.equals("DriverLogin")){
+                            uName.setText("HELLO " + driverUser.getName());
+                            uUsn.setText("Route Number " + driverUser.getRouteNumber());
+                            uPhno.setText("PHONE " + driverUser.getPhoneNumber());
+                            uUsn.setText("Vehicel Number " + driverUser.getVehicleNumber());
+                            uGender.setVisibility(View.GONE);
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });*/
+
+        }
+
         if(loginFrom.equals("StudentLogin")){
 
             String text1="Student User Details Loading...";
@@ -100,6 +125,10 @@ public class AccountDetails extends AppCompatActivity {
         else if(loginFrom.equals("ParentLogin")){
 
             String text1="Parent User Details Loading...";
+            uName.setText(text1);
+        }
+        else if (loginFrom.equals("DriverLogin")){
+            String text1="Driver User Details Loading...";
             uName.setText(text1);
         }
 

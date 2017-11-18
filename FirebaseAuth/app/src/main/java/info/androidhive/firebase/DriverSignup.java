@@ -3,16 +3,12 @@ package info.androidhive.firebase;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -22,33 +18,35 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class ParentLoginActivity extends AppCompatActivity {
+public class DriverSignup extends AppCompatActivity {
 
-    private EditText inputName,inputEmail, inputPassword,inputUSN,inputAddress,inputPhone;
-    private Spinner inputGender;
+    private EditText inputName,inputEmail, inputPassword,inputRouteNum,inputVehicleNum,inputPhone;
     private Button btnSignIn, btnSignUp, btnResetPassword;
     private ProgressBar progressBar;
     private FirebaseAuth auth;
-    DatabaseReference databaseStudents;
+    DatabaseReference databaseDrivers;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_parent_login);
+        setContentView(R.layout.activity_driver_signup);
 
         //Get Firebase auth instance
         auth = FirebaseAuth.getInstance();
-        databaseStudents= FirebaseDatabase.getInstance().getReference("parentUsers");
+        databaseDrivers = FirebaseDatabase.getInstance().getReference("driverUsers");
         btnSignIn = (Button) findViewById(R.id.sign_in_button);
         btnSignUp = (Button) findViewById(R.id.sign_up_button);
+        inputName=(EditText) findViewById(R.id.name);
         inputEmail = (EditText) findViewById(R.id.email);
         inputPassword = (EditText) findViewById(R.id.password);
-        inputUSN = (EditText) findViewById(R.id.usn);
+        inputPhone = (EditText) findViewById(R.id.phno);
+        inputRouteNum= (EditText) findViewById(R.id.bus_route_no);
+        inputVehicleNum= (EditText) findViewById(R.id.vehicle_no);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         btnResetPassword = (Button) findViewById(R.id.btn_reset_password);
         btnResetPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(ParentLoginActivity.this, ResetPasswordActivity.class));
+                startActivity(new Intent(DriverSignup.this, ResetPasswordActivity.class));
             }
         });
 
@@ -65,14 +63,19 @@ public class ParentLoginActivity extends AppCompatActivity {
 
                 String email = inputEmail.getText().toString().trim();
                 String password = inputPassword.getText().toString().trim();
-                final String usn = inputUSN.getText().toString();
-
-
-
-                if (usn.isEmpty()||usn.length()<12) {
-                    Toast.makeText(getApplicationContext(), "Enter valid USN", Toast.LENGTH_SHORT).show();
+                String mobile=inputPhone.getText().toString().trim();
+                String name = inputName.getText().toString();
+                String vehNo=inputVehicleNum.getText().toString();
+                String routeNo=inputRouteNum.getText().toString();
+                if (name.isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "Enter valid Name", Toast.LENGTH_SHORT).show();
                     return;
 
+                }
+
+                if (mobile.isEmpty() || mobile.length() < 10 || mobile.length() > 10) {
+                    Toast.makeText(getApplicationContext(), "Enter valid Phone Number", Toast.LENGTH_SHORT).show();
+                    return;
                 }
 
                 if (TextUtils.isEmpty(email)) {
@@ -89,36 +92,43 @@ public class ParentLoginActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "Password too short, enter minimum 6 characters!", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                if (TextUtils.isEmpty(vehNo)) {
+                    Toast.makeText(getApplicationContext(), "Enter Vehicle Number Mandatory field!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (TextUtils.isEmpty(routeNo)) {
+                    Toast.makeText(getApplicationContext(), "Enter Bus Route Number!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
                 progressBar.setVisibility(View.VISIBLE);
                 //create user
                 //auth.signInWithCustomToken("hello");
                 auth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(ParentLoginActivity.this, new OnCompleteListener<AuthResult>() {
+                        .addOnCompleteListener(DriverSignup.this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
-                                Toast.makeText(ParentLoginActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(DriverSignup.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
                                 progressBar.setVisibility(View.GONE);
                                 // If sign in fails, display a message to the user. If sign in succeeds
                                 // the auth state listener will be notified and logic to handle the
                                 // signed in user can be handled in the listener.
                                 if (!task.isSuccessful()) {
-                                    Toast.makeText(ParentLoginActivity.this, "Authentication failed." + task.getException(),
+                                    Toast.makeText(DriverSignup.this, "Authentication failed." + task.getException(),
                                             Toast.LENGTH_SHORT).show();
 
                                 } else {
-                                    Intent parentIntent=new Intent(getApplicationContext(), MainActivity.class);
-                                    parentIntent.putExtra("caller","ParentLogin");
-                                    parentIntent.putExtra("usn",usn);
-                                    startActivity(parentIntent);
+                                    Intent studentIntent=new Intent(getApplicationContext(), MainActivity.class);
+                                    studentIntent.putExtra("caller",getIntent().getStringExtra("caller"));
+                                    //studentIntent.putExtra("loggedIn","true");
+                                    startActivity(studentIntent);
                                     finish();
                                 }
                             }
                         });
                 //Write to DB
-//                String studentUserId=databaseDrivers.push().getKey();
-                ParentUser parentUser=new ParentUser(email,usn);
-                databaseStudents.child(usn).setValue(parentUser);
+                DriverUser driverUser=new DriverUser(name,email,password,routeNo,vehNo,mobile);
+                databaseDrivers.child(vehNo).setValue(driverUser);
             }
         });
     }

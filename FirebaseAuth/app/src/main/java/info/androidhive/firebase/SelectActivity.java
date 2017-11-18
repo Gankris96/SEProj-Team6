@@ -57,6 +57,9 @@ public class SelectActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Start the Signup activity for Driver
                 Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                count++;
+                intent.putExtra("previous","select");
+                intent.putExtra("caller","DriverLogin");
                 startActivity(intent);
             }
         });

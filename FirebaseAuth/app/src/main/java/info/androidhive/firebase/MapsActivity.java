@@ -82,6 +82,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DatabaseReference myParentRef;
     DatabaseReference databaseLatLng;
     DatabaseReference databaseReference;
+    DatabaseReference driverLatLng;
     LatLng latLng;
     String loginFrom;
     double latTrack;
@@ -102,6 +103,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         databaseLatLng = FirebaseDatabase.getInstance().getReference("UserLatLngData");
         myref = database.getReference("studentsUsers");
         myParentRef=FirebaseDatabase.getInstance().getReference("UserLatLngData");
+        driverLatLng=FirebaseDatabase.getInstance().getReference("BusPosition");
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         String emailID = user.getEmail();
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -527,7 +529,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 }
             });
+            //track bus location.
+               // getBusTrackingUpdates();
+        }
+        else if(loginFrom.equals("DriverLogin")&&auth.getCurrentUser()!=null) {
 
+            /*driverLatLng.orderByChild("email").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if(auth.getCurrentUser()!=null) {
+                        for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                        DriverUser temp=childDataSnapshot.getValue(DriverUser.class);
+                            userID=temp.getVehicleNumber();
+                        }
+                        locationMark = new LocationMark(userID, latLng.latitude, latLng.longitude);
+                        driverLatLng.child(userID).setValue(locationMark);
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });*/
         }
         else if(loginFrom.equals("ParentLogin")&&auth.getCurrentUser()!=null) {
             getTrackingUpdates(FirebaseDatabase.getInstance().getReference("UserLatLngData"));

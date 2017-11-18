@@ -75,6 +75,10 @@
         <activity
             android:name=".ParentLoginActivity"
             android:label="@string/title_activity_parent_login"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".DriverSignup"
+            android:label="@string/title_activity_driver_signup"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
