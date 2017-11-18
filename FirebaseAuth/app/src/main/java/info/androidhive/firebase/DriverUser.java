@@ -12,6 +12,9 @@ class DriverUser {
     private String vehicleNumber;
     private String phoneNumber;
 
+    public DriverUser() {
+    }
+
     public String getPhoneNumber() {
         return phoneNumber;
     }

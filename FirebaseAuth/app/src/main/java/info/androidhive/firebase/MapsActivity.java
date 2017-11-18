@@ -83,6 +83,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DatabaseReference databaseLatLng;
     DatabaseReference databaseReference;
     DatabaseReference driverLatLng;
+    DatabaseReference driverData;
     LatLng latLng;
     String loginFrom;
     double latTrack;
@@ -104,6 +105,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         myref = database.getReference("studentsUsers");
         myParentRef=FirebaseDatabase.getInstance().getReference("UserLatLngData");
         driverLatLng=FirebaseDatabase.getInstance().getReference("BusPosition");
+        driverData=FirebaseDatabase.getInstance().getReference("driverUsers");
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         String emailID = user.getEmail();
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -534,7 +536,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         else if(loginFrom.equals("DriverLogin")&&auth.getCurrentUser()!=null) {
 
-            /*driverLatLng.orderByChild("email").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+            driverData.orderByChild("email").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if(auth.getCurrentUser()!=null) {
@@ -552,7 +554,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 public void onCancelled(DatabaseError databaseError) {
 
                 }
-            });*/
+            });
         }
         else if(loginFrom.equals("ParentLogin")&&auth.getCurrentUser()!=null) {
             getTrackingUpdates(FirebaseDatabase.getInstance().getReference("UserLatLngData"));

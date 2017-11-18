@@ -94,7 +94,7 @@ public class AccountDetails extends AppCompatActivity {
         }
         else if(loginFrom.equals("DriverLogin")){
             databaseReference=firebaseDatabase.getReference("driverUsers");
-            /*databaseReference.orderByChild("email").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+            databaseReference.orderByChild("email").equalTo(auth.getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for(DataSnapshot childDataSnapshot:dataSnapshot.getChildren()){
@@ -103,7 +103,7 @@ public class AccountDetails extends AppCompatActivity {
                             uName.setText("HELLO " + driverUser.getName());
                             uUsn.setText("Route Number " + driverUser.getRouteNumber());
                             uPhno.setText("PHONE " + driverUser.getPhoneNumber());
-                            uUsn.setText("Vehicel Number " + driverUser.getVehicleNumber());
+                            uAddr.setText("Vehicle Number " + driverUser.getVehicleNumber());
                             uGender.setVisibility(View.GONE);
                         }
                     }
@@ -113,7 +113,7 @@ public class AccountDetails extends AppCompatActivity {
                 public void onCancelled(DatabaseError databaseError) {
 
                 }
-            });*/
+            });
 
         }
 

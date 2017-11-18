@@ -9,6 +9,9 @@ class ParentUser {
     //private String password;
     private String usn;
 
+    public ParentUser() {
+    }
+
     public String getEmail() {
         return email;
     }
