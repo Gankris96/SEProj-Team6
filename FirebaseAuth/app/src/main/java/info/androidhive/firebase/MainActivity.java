@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         btnmaps=(Button) findViewById(R.id.maps);
         btnChangeEmail=(Button) findViewById(R.id.change_email_button);
         btnAllocateBus = (Button) findViewById(R.id.allocate_bus);
+        //btnAllocateBus.setVisibility(View.GONE);
         btnChangePassword = (Button) findViewById(R.id.change_password_button);
         btnSendResetEmail = (Button) findViewById(R.id.sending_pass_reset_button);
         //btnRemoveUser = (Button) findViewById(R.id.remove_user_button);
@@ -107,18 +108,14 @@ public class MainActivity extends AppCompatActivity {
         changePassword.setVisibility(View.GONE);
         sendEmail.setVisibility(View.GONE);
         remove.setVisibility(View.GONE);
-        //Toast.makeText(MainActivity.this, getIntent().getStringExtra("caller"), Toast.LENGTH_SHORT).show();
         if((getIntent().getStringExtra("caller").equals("StudentLogin")) && (LoginActivity.loggedIn==true)) { //signupBtn = yes/no based on busAllocate=no/yes
-            Toast.makeText(MainActivity.this, user.getEmail(), Toast.LENGTH_SHORT).show();
             try {
                 myref.orderByChild("studentEmail").equalTo(user.getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
-                            //HashMap<String, String> studDetails = (HashMap) childDataSnapshot.getValue();
                             StudentUser temp = childDataSnapshot.getValue(StudentUser.class);
                             busAlloc =  temp.getAllocationStatus();
-                            Toast.makeText(MainActivity.this, String.valueOf(busAlloc), Toast.LENGTH_SHORT).show();
                             if(busAlloc)
                                 btnAllocateBus.setVisibility(View.GONE);
 
@@ -131,17 +128,12 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-                        //do nothing, do not update if error
                     }
                 });
             } catch (Exception e) {
-                // e.printStackTrace();
             }
         }
-        else{
-            Toast.makeText(MainActivity.this, "not a student", Toast.LENGTH_SHORT).show();
-            //Toast.makeText(MainActivity.this, getIntent().getStringExtra("caller"), Toast.LENGTH_SHORT).show();
-        }
+
 
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -177,15 +169,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
-                                //HashMap<String, String> studDetails = (HashMap) childDataSnapshot.getValue();
                                 StudentUser temp = childDataSnapshot.getValue(StudentUser.class);
-
-                                busAlloc =  temp.getAllocationStatus();
-                                Toast.makeText(MainActivity.this, temp.getStudentUSN(), Toast.LENGTH_SHORT).show();
-                                Toast.makeText(MainActivity.this, String.valueOf(busAlloc), Toast.LENGTH_SHORT).show();
-                                temp.setAllocationStatus(true);
-                                myref.child(temp.getStudentUSN()).setValue(temp);
-                                btnAllocateBus.setVisibility(View.GONE);
                             }
                             Intent allocateBus=new Intent(getApplicationContext(), AllocateBus.class);
                             allocateBus.putExtra("caller",getIntent().getStringExtra("caller"));
@@ -195,15 +179,10 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
-                            //do nothing, do not update if error
                         }
                     });
                 } catch (Exception e) {
-                    // e.printStackTrace();
                 }
-
-                //Start the Allocate Bus Intent
-
 
             }
         });

@@ -13,7 +13,9 @@ public class StudentUser {
     String studentAddr;
     String studentPhno;
     String studentGender;
+    String busStop;
     Boolean busAllocated;
+    String busNumber;
 
     public StudentUser(){
 
@@ -28,6 +30,8 @@ public class StudentUser {
         this.studentPhno = studentPhno;
         this.studentGender = studentGender;
         this.busAllocated = busAllocated;
+        this.busStop = null;
+        this.busNumber = null;
     }
 
     public String getStudentUserId() {
@@ -100,4 +104,11 @@ public class StudentUser {
 
     public void setAllocationStatus(Boolean status) { this.busAllocated = status; }
 
+    public String getBusStop() { return busStop;  }
+
+    public void setBusStop(String busStop) { this.busStop = busStop; }
+
+    public void setBusNumber(String busNumber) { this.busNumber = busNumber; }
+
+    public String getBusNumber() { return busNumber; }
 }
