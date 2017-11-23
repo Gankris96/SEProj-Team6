@@ -30,8 +30,8 @@ public class StudentUser {
         this.studentPhno = studentPhno;
         this.studentGender = studentGender;
         this.busAllocated = busAllocated;
-        this.busStop = null;
-        this.busNumber = null;
+        this.busStop = "NA";
+        this.busNumber = "NA";
     }
 
     public String getStudentUserId() {
