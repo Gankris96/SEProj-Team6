@@ -95,6 +95,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Bitmap smallMarker;
     boolean usnGot;
     boolean track;
+    String busNumber, busRoute;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -157,6 +158,53 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+    public void plotRoute(){
+        String routes[] = busRoute.split(";");
+        for(String loc:routes) {
+            String locTemp[] = loc.split(":");
+            String coordinates[] = locTemp[1].split(",");
+            LatLng tempLocation = new LatLng(Double.parseDouble(coordinates[0]), Double.parseDouble(coordinates[1]));
+            MarkerPoints.add(tempLocation);
+        }
+
+        MarkerOptions options = new MarkerOptions();
+        for(LatLng tempLoc : MarkerPoints) {
+            options.position(tempLoc);
+            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+            mMap.addMarker(options);
+        }
+
+        if (MarkerPoints.size() >= 2) {
+            LatLng origin = MarkerPoints.get(0);
+            LatLng dest = MarkerPoints.get(1);
+
+            // Getting URL to the Google Directions API
+            String url = getUrl(origin, dest);
+            Log.d("onMapClick", url.toString());
+            FetchUrl FetchUrl = new FetchUrl();
+
+            // Start downloading json data from Google Directions API
+            FetchUrl.execute(url);
+
+            for (int i = 2; i < MarkerPoints.size(); i++)//loop starts from 2 because 0 and 1 are already printed
+            {
+                origin = dest;
+                dest = MarkerPoints.get(i);
+                url = getUrl(origin, dest);
+                Log.d("onMapClick", url.toString());
+                FetchUrl = new FetchUrl();
+                // Start downloading json data from Google Directions API
+                FetchUrl.execute(url);
+
+            }
+            //move map camera
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(origin));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(40));
+            //onLocationChanged(Location location);
+            ParserTask parse = new ParserTask();
+        }
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -177,8 +225,56 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
 
+        if(loginFrom.equals("DriverLogin")) {
+            DatabaseReference busRef = database.getReference("driverUsers");
+
+            String userMail = auth.getCurrentUser().getEmail();
+            //Toast.makeText(MapsActivity.this, userMail, Toast.LENGTH_SHORT).show();
+            busRef.orderByChild("email").equalTo(userMail).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for(DataSnapshot childDataSnapshot:dataSnapshot.getChildren()){
+                        DriverUser temp = childDataSnapshot.getValue(DriverUser.class);
+                        busNumber = temp.getVehicleNumber();
+                    }
+                    //Toast.makeText(MapsActivity.this, busNumber, Toast.LENGTH_SHORT).show();
+
+
+                    DatabaseReference busRef2 = database.getReference("BusDetails");
+                    busRef2.orderByChild("busNumber").equalTo(busNumber).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for(DataSnapshot childDataSnapshot:dataSnapshot.getChildren()){
+                                BusDetails temp = childDataSnapshot.getValue(BusDetails.class);
+                                busRoute = temp.getRoute();
+                            }
+                            //Toast.makeText(MapsActivity.this, busRoute, Toast.LENGTH_SHORT).show();
+                            plotRoute();
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+
+
+
+
+
+
+        }
+
         // Setting onclick event listener for the map
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+        /*mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
             @Override
             public void onMapClick(LatLng point) {
@@ -198,10 +294,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Setting the position of the marker
                 options.position(point);
 
-                /**
+
                  * For the start location, the color of marker is GREEN and
                  * for the end location, the color of marker is RED.
-                 */
+
                 if (MarkerPoints.size() == 1) {
                     options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                 } else if (MarkerPoints.size() == 2) {
@@ -250,7 +346,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
             }
-        });
+        });*/
 
     }
 
