@@ -29,6 +29,7 @@ public class AllocateBus extends AppCompatActivity {
     private FirebaseAuth auth;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference ref;
+    DatabaseReference busRef;
     String  uName, uUsn, uGender, busDriver;
     String busCapacity, femaleCapacity;
     int busCapacityy, femaleCapacityy;
@@ -39,6 +40,7 @@ public class AllocateBus extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
 
         ref = database.getReference("studentsUsers");
+
         //Toast.makeText(AllocateBus.this, auth.getCurrentUser().getEmail(), Toast.LENGTH_SHORT).show();
         String userMail = auth.getCurrentUser().getEmail();
         ref.orderByChild("studentEmail").equalTo(userMail).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -60,11 +62,11 @@ public class AllocateBus extends AppCompatActivity {
 
         displayBus=(Spinner) findViewById(R.id.display_buses);
         busRoutes=(Spinner)findViewById(R.id.bus_routes);
-        Toast.makeText(AllocateBus.this, "please select a bus", Toast.LENGTH_SHORT).show();
+        Toast.makeText(AllocateBus.this, "Please Select A Bus", Toast.LENGTH_SHORT).show();
         btnAllocate=(Button) findViewById(R.id.btn_allocate);
         final List<String> spinnerArray =  new ArrayList<String>();
-        ref = database.getReference().child("BusDetails");
-        ref.addListenerForSingleValueEvent(
+        busRef = database.getReference().child("BusDetails");
+        busRef.addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -91,10 +93,10 @@ public class AllocateBus extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int myPosition, long myID) {
 
-                ref = database.getReference("BusDetails");
+                busRef = database.getReference("BusDetails");
                 String item = parentView.getItemAtPosition(myPosition).toString();
                 final List<String> spinnerArray2 =  new ArrayList<String>();
-                ref.orderByChild("busNumber").equalTo(item).addListenerForSingleValueEvent(
+                busRef.orderByChild("busNumber").equalTo(item).addListenerForSingleValueEvent(
                         new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -162,8 +164,8 @@ public class AllocateBus extends AppCompatActivity {
                         }
 
                         if(busAllocated) {
-                            ref = database.getReference("BusDetails");
-                            ref.orderByChild("busNumber").equalTo(busNo).addListenerForSingleValueEvent(
+                            busRef = database.getReference("BusDetails");
+                            busRef.orderByChild("busNumber").equalTo(busNo).addListenerForSingleValueEvent(
                                     new ValueEventListener() {
                                         @Override
                                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -171,8 +173,28 @@ public class AllocateBus extends AppCompatActivity {
                                                 BusDetails temp = childDataSnapshot.getValue(BusDetails.class);
                                                 temp.setCapacity(Integer.toString(busCapacityy));
                                                 temp.setFemaleCapacity(Integer.toString(femaleCapacityy));
-                                                ref.child(temp.getBusNumber()).setValue(temp);
+                                                busRef.child(temp.getBusNumber()).setValue(temp);
                                             }
+                                            ref = database.getReference("studentsUsers");
+                                            ref.orderByChild("studentUSN").equalTo(uUsn).addListenerForSingleValueEvent(
+                                                    new ValueEventListener() {
+                                                        @Override
+                                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                                            for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                                                                StudentUser temp2 = childDataSnapshot.getValue(StudentUser.class);
+                                                                temp2.setAllocationStatus(true);
+                                                                temp2.setBusStop(busStop);
+                                                                temp2.setBusNumber(busNo);
+                                                                ref.child(temp2.getStudentUSN()).setValue(temp2);
+                                                            }
+
+
+                                                        }
+
+                                                        @Override
+                                                        public void onCancelled(DatabaseError databaseError) {
+                                                        }
+                                                    });
                                         }
 
                                         @Override
@@ -183,28 +205,9 @@ public class AllocateBus extends AppCompatActivity {
 
 
 
-                            ref = database.getReference("studentsUsers");
-                            ref.orderByChild("studentUSN").equalTo(uUsn).addListenerForSingleValueEvent(
-                                    new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(DataSnapshot dataSnapshot) {
-                                            for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
-                                                StudentUser temp = childDataSnapshot.getValue(StudentUser.class);
-                                                temp.setAllocationStatus(true);
-                                                temp.setBusStop(busStop);
-                                                temp.setBusNumber(busNo);
-                                                ref.child(temp.getStudentUSN()).setValue(temp);
-                                            }
 
-
-                                        }
-
-                                        @Override
-                                        public void onCancelled(DatabaseError databaseError) {
-                                        }
-                                    });
                         }
-                    busAllocated = false;
+                    //busAllocated = false;
 
 
                 }

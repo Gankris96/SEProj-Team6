@@ -28,8 +28,8 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button btnChangeEmail, btnChangePassword, btnSendResetEmail, btnRemoveUser,
-            changeEmail, changePassword, sendEmail, remove, signOut, btnAccountDetails, btnmaps, btnAllocateBus, btnConfirmTrip;
+    private Button btnChangeEmail, btnChangePassword, btnSendResetEmail, btnRemoveUser, changeEmail, changePassword, sendEmail, remove, signOut, btnAccountDetails, btnmaps, btnAllocateBus,btnSOS, btnConfirmTrip;
+
     private Button userName;
     private EditText oldEmail, newEmail, password, newPassword;
     private ProgressBar progressBar;
@@ -88,6 +88,10 @@ public class MainActivity extends AppCompatActivity {
         btnChangePassword = (Button) findViewById(R.id.change_password_button);
         btnSendResetEmail = (Button) findViewById(R.id.sending_pass_reset_button);
         //btnRemoveUser = (Button) findViewById(R.id.remove_user_button);
+
+        //SOS Button
+        btnSOS=(Button)findViewById(R.id.sos_msg);
+
         btnAccountDetails=(Button)findViewById(R.id.userdetails);
         changeEmail = (Button) findViewById(R.id.changeEmail);
         changePassword = (Button) findViewById(R.id.changePass);
@@ -144,6 +148,17 @@ public class MainActivity extends AppCompatActivity {
         if (progressBar != null) {
             progressBar.setVisibility(View.GONE);
         }
+
+        btnSOS.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View v) {
+                    //sos API call logic
+            }
+        });
+
+
+
         btnmaps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
