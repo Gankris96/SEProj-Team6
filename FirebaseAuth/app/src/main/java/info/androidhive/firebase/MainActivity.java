@@ -29,7 +29,7 @@ import java.util.HashMap;
 public class MainActivity extends AppCompatActivity {
 
     private Button btnChangeEmail, btnChangePassword, btnSendResetEmail, btnRemoveUser,
-            changeEmail, changePassword, sendEmail, remove, signOut,btnAccountDetails,btnmaps,btnAllocateBus;
+            changeEmail, changePassword, sendEmail, remove, signOut, btnAccountDetails, btnmaps, btnAllocateBus, btnConfirmTrip;
     private Button userName;
     private EditText oldEmail, newEmail, password, newPassword;
     private ProgressBar progressBar;
@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     String oldEmailString;
     boolean isUpdated=false;
+    boolean routeUpdated = false;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     //wrap with IF for other user types. SO the .getReference(); will change to driverUsers or parentUsers
     DatabaseReference myref = database.getReference("studentsUsers");
@@ -108,6 +109,8 @@ public class MainActivity extends AppCompatActivity {
         changePassword.setVisibility(View.GONE);
         sendEmail.setVisibility(View.GONE);
         remove.setVisibility(View.GONE);
+
+        btnConfirmTrip = (Button) findViewById(R.id.confirm_trip);
         if((getIntent().getStringExtra("caller").equals("StudentLogin")) && (LoginActivity.loggedIn==true)) { //signupBtn = yes/no based on busAllocate=no/yes
             try {
                 myref.orderByChild("studentEmail").equalTo(user.getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -404,6 +407,57 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //SelectActivity.count=-1;
                 signOut();
+            }
+        });
+
+        btnConfirmTrip.setOnClickListener(new View.OnClickListener() {
+            String busStop;
+            String busNo;
+            @Override
+            public void onClick(View v) {
+                if(!routeUpdated) {
+                    myref = database.getReference("studentsUsers");
+                    myref.orderByChild("studentEmail").equalTo(user.getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                                StudentUser temp = childDataSnapshot.getValue(StudentUser.class);
+                                busStop = temp.getBusStop();
+                                busNo = temp.getBusNumber();
+                            }
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
+                    });
+                    myref = database.getReference("BusDetails");
+                    myref.orderByChild("busNumber").equalTo(busNo).addListenerForSingleValueEvent(
+                            new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                                        BusDetails temp = childDataSnapshot.getValue(BusDetails.class);
+                                        String busRoute = temp.getRoute();
+                                        String routes[] = busRoute.split(",");
+                                        String newRoute = "";
+                                        for (String entryRoute : routes) {
+                                            if (!entryRoute.equals(busStop))
+                                                newRoute = newRoute + entryRoute + ",";
+                                        }
+                                        temp.setRoute(newRoute);
+                                        myref.child(temp.getBusNumber()).setValue(temp);
+                                        routeUpdated = true;
+                                        Toast.makeText(MainActivity.this, "Notified driver of your due absence tomorrow", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+                                }
+                            });
+                }
             }
         });
 
