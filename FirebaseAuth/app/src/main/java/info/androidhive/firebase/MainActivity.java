@@ -448,7 +448,43 @@ public class MainActivity extends AppCompatActivity {
                                 StudentUser temp = childDataSnapshot.getValue(StudentUser.class);
                                 busStop = temp.getBusStop();
                                 busNo = temp.getBusNumber();
+                                Toast.makeText(MainActivity.this, "Stop", Toast.LENGTH_SHORT).show();
                             }
+                            myref = database.getReference("BusDetails");
+                            myref.orderByChild("busNumber").equalTo(busNo).addListenerForSingleValueEvent(
+                                    new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                            for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                                                BusDetails temp = childDataSnapshot.getValue(BusDetails.class);
+                                                String busRoute = temp.getRoute();
+                                                String routes[] = busRoute.split(";");
+                                                int routeLen=routes.length;
+                                                //JPN:lat,long
+                                                //BSK:lat,lng ..
+                                                String newRoute = "";
+                                                int i=0;
+                                                for (String entryRoute : routes) {
+                                                    String stopName=entryRoute.split(":")[0];
+                                                    if (!stopName.equals(busStop)&&(i!=routeLen-1))
+                                                        newRoute = newRoute + entryRoute + ";";
+                                                    else if(!stopName.equals(busStop)&&(i==routeLen-1)){
+                                                        newRoute = newRoute + entryRoute ;
+                                                    }
+                                                    i=i+1;
+                                                }
+                                                temp.setRoute(newRoute);
+                                                myref.child(temp.getBusNumber()).setValue(temp);
+                                                routeUpdated = true;
+                                                Toast.makeText(MainActivity.this, "Notified driver of your due absence tomorrow", Toast.LENGTH_SHORT).show();
+                                                btnConfirmTrip.setClickable(false);
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(DatabaseError databaseError) {
+                                        }
+                                    });
 
                         }
 
@@ -456,41 +492,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onCancelled(DatabaseError databaseError) {
                         }
                     });
-                    myref = database.getReference("BusDetails");
-                    myref.orderByChild("busNumber").equalTo(busNo).addListenerForSingleValueEvent(
-                            new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
-                                        BusDetails temp = childDataSnapshot.getValue(BusDetails.class);
-                                        String busRoute = temp.getRoute();
-                                        String routes[] = busRoute.split(";");
-                                        int routeLen=routes.length;
-                                        //JPN:lat,long
-                                        //BSK:lat,lng ..
-                                        String newRoute = "";
-                                        int i=0;
-                                        for (String entryRoute : routes) {
-                                            String stopName=entryRoute.split(":")[0];
-                                            if (!stopName.equals(busStop)&&(i!=routeLen-1))
-                                                newRoute = newRoute + entryRoute + ";";
-                                            else if(!stopName.equals(busStop)&&(i==routeLen-1)){
-                                                newRoute = newRoute + entryRoute ;
-                                            }
-                                            i=i+1;
-                                        }
-                                        temp.setRoute(newRoute);
-                                        myref.child(temp.getBusNumber()).setValue(temp);
-                                        routeUpdated = true;
-                                        Toast.makeText(MainActivity.this, "Notified driver of your due absence tomorrow", Toast.LENGTH_SHORT).show();
-                                        btnConfirmTrip.setClickable(false);
-                                    }
-                                }
 
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-                                }
-                            });
                 }
             }
         });
