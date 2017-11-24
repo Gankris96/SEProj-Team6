@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,6 +24,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.net.URL;
+import java.net.MalformedURLException;
 
 import java.util.HashMap;
 
@@ -42,7 +46,8 @@ public class MainActivity extends AppCompatActivity {
     //wrap with IF for other user types. SO the .getReference(); will change to driverUsers or parentUsers
     DatabaseReference myref = database.getReference("studentsUsers");
     String userId;
-    String userUSN,userPass,userAddr,userGender,userPhone,uName;
+    String userUSN,userPass,userAddr,userGender,userPhone,uName,parentEmail;
+    double latitude,longitude;
     Boolean busAlloc;
     static int signedOut=0;
 
@@ -129,6 +134,8 @@ public class MainActivity extends AppCompatActivity {
                         for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
                             StudentUser temp = childDataSnapshot.getValue(StudentUser.class);
                             busAlloc =  temp.getAllocationStatus();
+                            userUSN = temp.getStudentUSN();
+                            uName = temp.getStudentName();
                             if(busAlloc) {
                                 btnAllocateBus.setVisibility(View.GONE);
                                 btnmaps.setVisibility(View.VISIBLE);
@@ -162,7 +169,51 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                    //sos API call logic
+
+
+                    /*URL x = new URL("http://java.sun.com/FAQ.html");
+                    Toast.makeText(MainActivity.this, "BEFORE CALL", Toast.LENGTH_SHORT).show();
+
+                    Toast.makeText(MainActivity.this, "AFTER CALL", Toast.LENGTH_SHORT).show();*/
+
+                    DatabaseReference ref = database.getReference("parentUsers");
+                    ref.orderByChild("usn").equalTo(userUSN).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for(DataSnapshot childDataSnapshot:dataSnapshot.getChildren()){
+                                ParentUser temp = childDataSnapshot.getValue(ParentUser.class);
+                                parentEmail = temp.getEmail();
+                            }
+
+                            DatabaseReference ref2 = database.getReference("UserLatLngData");
+                            ref2.orderByChild("userID").equalTo(userUSN).addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    for(DataSnapshot childDataSnapshot:dataSnapshot.getChildren()){
+                                        LocationMark temp = childDataSnapshot.getValue(LocationMark.class);
+                                        latitude = temp.getLatitude();
+                                        longitude = temp.getLongitude();
+
+                                    }
+                                    new DownloadFilesTask(uName, parentEmail, latitude, longitude).execute();
+                                    Toast.makeText(MainActivity.this, "SOS sent to " + parentEmail, Toast.LENGTH_SHORT).show();
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+
+
+                    });
+
             }
         });
 

@@ -106,9 +106,12 @@ public class AllocateBus extends AppCompatActivity {
                                     String route = (String) singleBus.get("route");
                                     busCapacity = (String) singleBus.get("capacity");
                                     femaleCapacity = (String) singleBus.get("femaleCapacity");
-                                    String arrRoute[] = route.split(",");
-                                    for(String entryRoute:arrRoute)
-                                        spinnerArray2.add(entryRoute);
+                                    String arrRoute[] = route.split(";");
+                                    for(String entryRoute:arrRoute) {
+                                        String tempStop[] = entryRoute.split(":");
+                                        spinnerArray2.add((String)tempStop[0]);
+                                    }
+
                                 }
                                 ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_item, spinnerArray2);
                                 adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
