@@ -25,7 +25,7 @@ public class AccountDetails extends AppCompatActivity {
     FirebaseAuth auth;
     DatabaseReference databaseReference;
     FirebaseDatabase firebaseDatabase;
-    TextView uName,uEmail,uUsn,uAddr,uPhno,uGender;
+    TextView uName,uEmail,uUsn,uAddr,uPhno,uGender,uBusStop,uBusNum;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,6 +37,9 @@ public class AccountDetails extends AppCompatActivity {
         uAddr=(TextView)findViewById(R.id.uaddr);
         uGender=(TextView)findViewById(R.id.uusrgender);
         uPhno=(TextView)findViewById(R.id.uphone);
+        uBusStop=(TextView)findViewById(R.id.userBusStop);
+        uBusNum=(TextView)findViewById(R.id.userBusNum);
+
 
 
 
@@ -56,6 +59,8 @@ public class AccountDetails extends AppCompatActivity {
                         uPhno.setText("PHONE " + studDetails.get("studentPhno"));
                         uUsn.setText("USN " + studDetails.get("studentUSN"));
                         uGender.setText("Gender " + studDetails.get("studentGender"));
+                        uBusStop.setText("Bus Stop Location " +studDetails.get("busStop") );
+                        uBusNum.setText("Allocated Bus Number " +studDetails.get("busNumber") );
                     }
                 }
             }
@@ -80,6 +85,8 @@ public class AccountDetails extends AppCompatActivity {
                             uAddr.setVisibility(View.GONE);
                             uPhno.setVisibility(View.GONE);
                             uGender.setVisibility(View.GONE);
+                            uBusStop.setVisibility(View.GONE);
+                            uBusNum.setVisibility(View.GONE);
 
                         }
                     }
@@ -105,6 +112,8 @@ public class AccountDetails extends AppCompatActivity {
                             uPhno.setText("PHONE " + driverUser.getPhoneNumber());
                             uAddr.setText("Vehicle Number " + driverUser.getVehicleNumber());
                             uGender.setVisibility(View.GONE);
+                            uBusStop.setVisibility(View.GONE);
+                            uBusNum.setVisibility(View.GONE);
                         }
                     }
                 }

@@ -91,6 +91,8 @@ public class MainActivity extends AppCompatActivity {
 
         //SOS Button
         btnSOS=(Button)findViewById(R.id.sos_msg);
+        //Confirm trip button
+        btnConfirmTrip=(Button)findViewById(R.id.confirm_trip);
 
         btnAccountDetails=(Button)findViewById(R.id.userdetails);
         changeEmail = (Button) findViewById(R.id.changeEmail);
@@ -113,7 +115,11 @@ public class MainActivity extends AppCompatActivity {
         changePassword.setVisibility(View.GONE);
         sendEmail.setVisibility(View.GONE);
         remove.setVisibility(View.GONE);
-
+        if(!(getIntent().getStringExtra("caller").equals("StudentLogin"))){
+            btnAllocateBus.setVisibility(View.GONE);
+            btnConfirmTrip.setVisibility(View.GONE);
+            btnSOS.setVisibility(View.GONE);
+        }
         btnConfirmTrip = (Button) findViewById(R.id.confirm_trip);
         if((getIntent().getStringExtra("caller").equals("StudentLogin")) && (LoginActivity.loggedIn==true)) { //signupBtn = yes/no based on busAllocate=no/yes
             try {
@@ -123,15 +129,18 @@ public class MainActivity extends AppCompatActivity {
                         for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
                             StudentUser temp = childDataSnapshot.getValue(StudentUser.class);
                             busAlloc =  temp.getAllocationStatus();
-                            if(busAlloc)
+                            if(busAlloc) {
                                 btnAllocateBus.setVisibility(View.GONE);
-
-                            else
+                                btnmaps.setVisibility(View.VISIBLE);
+                            }
+                            else {
                                 btnAllocateBus.setVisibility(View.VISIBLE);
-
+                                btnmaps.setVisibility(View.GONE);
+                            }
                         }
 
                         }
+
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
@@ -455,16 +464,26 @@ public class MainActivity extends AppCompatActivity {
                                     for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
                                         BusDetails temp = childDataSnapshot.getValue(BusDetails.class);
                                         String busRoute = temp.getRoute();
-                                        String routes[] = busRoute.split(",");
+                                        String routes[] = busRoute.split(";");
+                                        int routeLen=routes.length;
+                                        //JPN:lat,long
+                                        //BSK:lat,lng ..
                                         String newRoute = "";
+                                        int i=0;
                                         for (String entryRoute : routes) {
-                                            if (!entryRoute.equals(busStop))
-                                                newRoute = newRoute + entryRoute + ",";
+                                            String stopName=entryRoute.split(":")[0];
+                                            if (!stopName.equals(busStop)&&(i!=routeLen-1))
+                                                newRoute = newRoute + entryRoute + ";";
+                                            else if(!stopName.equals(busStop)&&(i==routeLen-1)){
+                                                newRoute = newRoute + entryRoute ;
+                                            }
+                                            i=i+1;
                                         }
                                         temp.setRoute(newRoute);
                                         myref.child(temp.getBusNumber()).setValue(temp);
                                         routeUpdated = true;
                                         Toast.makeText(MainActivity.this, "Notified driver of your due absence tomorrow", Toast.LENGTH_SHORT).show();
+                                        btnConfirmTrip.setClickable(false);
                                     }
                                 }
 

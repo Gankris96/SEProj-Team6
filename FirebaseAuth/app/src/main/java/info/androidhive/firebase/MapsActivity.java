@@ -65,6 +65,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LocationListener {
     String userID;
     String childUSN;
+    String busNum;
     LocationListener locationListener;
     LocationMark locationMark;
     private GoogleMap mMap;
@@ -84,6 +85,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DatabaseReference databaseReference;
     DatabaseReference driverLatLng;
     DatabaseReference driverData;
+    //DatabaseReference busPosition;
+
     LatLng latLng;
     String loginFrom;
     double latTrack;
@@ -95,6 +98,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Bitmap smallMarker;
     boolean usnGot;
     boolean track;
+    boolean busTrack;
     String busNumber, busRoute;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +106,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_maps);
         auth = FirebaseAuth.getInstance();
         track=false;
+        busTrack=false;
         databaseLatLng = FirebaseDatabase.getInstance().getReference("UserLatLngData");
         myref = database.getReference("studentsUsers");
         myParentRef=FirebaseDatabase.getInstance().getReference("UserLatLngData");
@@ -519,6 +524,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
+    protected void getBusTrackingUpdates(DatabaseReference busDatRefObj,String busNum) {
+        final DatabaseReference busPos=busDatRefObj;
+        String lat;
+        String lng;
+        busPos.orderByChild("userID").equalTo(busNum).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot chiDataSnapshot1:dataSnapshot.getChildren()) {
+                    LocationMark locationMark = chiDataSnapshot1.getValue(LocationMark.class);
+                    locationMark.getLatitude();
+
+                    //TODO get the lat and lng values and update the tracker Marker
+                    //LocationMark locationMark=studDetails.get("01FB14ECS073");
+
+                    latTrack = Double.parseDouble(String.valueOf(locationMark.getLatitude()));
+                    lngTrack = Double.parseDouble(String.valueOf(locationMark.getLongitude()));
+                }
+                busTrack=true;
+                busPos.onDisconnect();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
 
     protected void getTrackingUpdates(DatabaseReference datRefObj) {
         final DatabaseReference dat=datRefObj;
@@ -615,6 +647,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
                             HashMap<String, String> studDetails = (HashMap) childDataSnapshot.getValue();
                             userID = studDetails.get("studentUSN");
+                            busNum=studDetails.get("busNumber");
                         }
                         locationMark = new LocationMark(userID, latLng.latitude, latLng.longitude);
                         databaseLatLng.child(userID).setValue(locationMark);
@@ -628,7 +661,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             });
             //track bus location.
-               //getBusTrackingUpdates();
+               getBusTrackingUpdates(FirebaseDatabase.getInstance().getReference("BusPosition"),busNum);
         }
         else if(loginFrom.equals("DriverLogin")&&auth.getCurrentUser()!=null) {
 
@@ -678,7 +711,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             animateMarker(location1,mTrackStudent);
 
         }
-        //stop location updates
+        if(busTrack==true) {
+            if (mTrackStudent != null) {
+                mTrackStudent.remove();
+            }
+            MarkerOptions markerTrack = new MarkerOptions();
+            markerTrack.position(new LatLng(latTrack, lngTrack));
+            markerTrack.title("Tracking Location");
+            markerTrack.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(latTrack, lngTrack)));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(19));
+            mTrackStudent = mMap.addMarker(markerTrack);
+            Location location1=new Location("");
+            location1.setLatitude(latTrack);
+            location1.setLongitude(lngTrack);
+            animateMarker(location1,mTrackStudent);
+
+        }
+            //stop location updates
 
         if ((mGoogleApiClient != null&&auth.getCurrentUser()==null)) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);

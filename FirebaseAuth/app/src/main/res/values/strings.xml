@@ -57,5 +57,6 @@
     <string name="allocate_bus">Confirm Allocation</string>
     <string name="Request_bus">Request For Bus</string>
     <string name="confirm_trip">Confirm Trip</string>
+    <string name="SkipToday">Skip Trip</string>
 
 </resources>
